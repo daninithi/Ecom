@@ -62,6 +62,9 @@ services:
       SPRING_DATASOURCE_USERNAME: myapp
       SPRING_DATASOURCE_PASSWORD: 123456789
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      SPRING_KAFKA_PRODUCER_VALUE_SERIALIZER: org.springframework.kafka.support.serializer.JsonSerializer
+      SPRING_KAFKA_PRODUCER_KEY_SERIALIZER: org.apache.kafka.common.serialization.StringSerializer
+
     ports:
       - "8081:8081"
 
