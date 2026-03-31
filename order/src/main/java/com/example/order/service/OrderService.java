@@ -5,7 +5,13 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.kafka.core.KafkaTemplate;
 
+import com.example.common.event.OrderEvent;
+import com.example.common.event.OrderStatusEvent;
+import com.example.common.event.ProductEvent;
 import com.example.order.dto.OrderDTO;
 import com.example.order.model.Order;
 import com.example.order.model.Order.OrderStatus;
@@ -21,10 +27,10 @@ public class OrderService {
     
     private final OrderRepository orderRepository;
     private final RestTemplate restTemplate;
+
+    @Autowired
+    private KafkaTemplate<String, OrderEvent> kafkaTemplate;
     
-    /**
-     * Verify if product exists by calling the Product service
-     */
     private void verifyProductExists(Long productId) {
         try {
             String url = "http://product/api/products/" + productId;
@@ -63,7 +69,28 @@ public class OrderService {
         order.setQuantity(orderDTO.getQuantity());
         order.setStatus(OrderStatus.PENDING);
         
-        return orderRepository.save(order);
+        Order savedOrder = orderRepository.save(order);
+
+        OrderEvent orderEvent = new OrderEvent(
+            "ORDER_CREATED",
+            savedOrder.getId(),
+            savedOrder.getProductId(),
+            savedOrder.getQuantity()
+        );
+
+        kafkaTemplate.send("ORDER_CREATED", orderEvent);
+
+        return savedOrder;
+    }
+
+    @KafkaListener(topics = "ORDER_STATUS", groupId = "order-group")
+    public void updateOrderStatus(OrderStatusEvent event) {
+
+        Order order = orderRepository.findById(event.getOrderId()).orElseThrow();
+
+        order.setStatus(OrderStatus.valueOf(event.getStatus()));
+
+        orderRepository.save(order);
     }
     
     public Order getOrderById(Long id) {

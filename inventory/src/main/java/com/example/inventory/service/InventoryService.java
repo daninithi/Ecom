@@ -3,12 +3,15 @@ package com.example.inventory.service;
 import java.util.List;
 
 import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import com.example.inventory.model.Inventory;
 import com.example.inventory.repository.InventoryRepository;
+import com.example.common.event.OrderEvent;
+import com.example.common.event.OrderStatusEvent;
 import com.example.common.event.ProductEvent;
 import com.example.common.exception.BadRequestException;
 import com.example.common.exception.ResourceNotFoundException;
@@ -23,21 +26,8 @@ public class InventoryService {
     
     private final InventoryRepository inventoryRepository;
     private final RestTemplate restTemplate;
-    
-    private void verifyProductExists(Long productId) {
-        try {
-            String url = "http://product/api/products/" + productId;
-            restTemplate.getForEntity(url, Object.class);
-        } catch (HttpClientErrorException.NotFound e) {
-            throw new ResourceNotFoundException("Product with ID " + productId + " does not exist");
-        } catch (Exception e) {
-            throw new BadRequestException("Unable to verify product existence: " + e.getMessage());
-        }
-    }
-    
-    public List<Inventory> getAllInventory() {
-        return inventoryRepository.findAll();
-    }
+
+    private final KafkaTemplate<String, OrderStatusEvent> kafkaTemplate;
     
     public Inventory createInventory(InventoryDTO inventory) {
         // Validate inventory data
@@ -78,6 +68,29 @@ public class InventoryService {
             inventoryRepository.save(inventory);
         }
     }
+
+    @KafkaListener(topics = "ORDER_CREATED", groupId = "inventory-group")
+    public void handleOrderCreatedEvent(OrderEvent event) {
+        if ("ORDER_CREATED".equals(event.getEventType())) {
+            Inventory inventory = inventoryRepository.findByProductId(event.getProductId())
+                .orElseThrow(() -> new ResourceNotFoundException("Inventory", "productId", event.getProductId()));
+            
+            if (inventory.getStock() >= event.getQuantity()) {
+                inventory.setStock(inventory.getStock() - event.getQuantity());
+                inventoryRepository.save(inventory);
+
+                kafkaTemplate.send("ORDER_STATUS",
+                    new OrderStatusEvent(event.getOrderId(), "SUCCESS")
+                );
+            } else {
+                // send failure event
+                kafkaTemplate.send("ORDER_STATUS",
+                    new OrderStatusEvent(event.getOrderId(), "FAILED")
+                );
+            }
+        }
+    }
+
 
     public Inventory getInventoryById(Long id) {
         return inventoryRepository.findById(id)
