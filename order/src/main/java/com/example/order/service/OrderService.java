@@ -126,30 +126,30 @@ public class OrderService {
     public Order cancelOrder(Long id) {
         Order order = getOrderById(id);
         
-        if (order.getStatus() == OrderStatus.COMPLETED) {
-            throw new BadRequestException("Cannot cancel a completed order");
+        if (order.getStatus() == OrderStatus.SUCCESS) {
+            throw new BadRequestException("Cannot cancel a successful order");
         }
         
-        if (order.getStatus() == OrderStatus.CANCELLED) {
-            throw new BadRequestException("Order is already cancelled");
+        if (order.getStatus() == OrderStatus.FAILED) {
+            throw new BadRequestException("Order is already failed");
         }
         
-        order.setStatus(OrderStatus.CANCELLED);
+        order.setStatus(OrderStatus.FAILED);
         return orderRepository.save(order);
     }
     
     public Order completeOrder(Long id) {
         Order order = getOrderById(id);
         
-        if (order.getStatus() == OrderStatus.COMPLETED) {
+        if (order.getStatus() == OrderStatus.SUCCESS) {
             throw new BadRequestException("Order is already completed");
         }
         
-        if (order.getStatus() == OrderStatus.CANCELLED) {
-            throw new BadRequestException("Cannot complete a cancelled order");
+        if (order.getStatus() == OrderStatus.FAILED) {
+            throw new BadRequestException("Cannot complete a failed order");
         }
         
-        order.setStatus(OrderStatus.COMPLETED);
+        order.setStatus(OrderStatus.SUCCESS);
         return orderRepository.save(order);
     }
     

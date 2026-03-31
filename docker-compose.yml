@@ -57,14 +57,12 @@ services:
       - discovery-server
       - kafka
     environment:
+      # Only override environment-specific values
       EUREKA_SERVER_URL: http://discovery-server:8761/eureka/
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/product_db
       SPRING_DATASOURCE_USERNAME: myapp
       SPRING_DATASOURCE_PASSWORD: 123456789
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
-      SPRING_KAFKA_PRODUCER_VALUE_SERIALIZER: org.springframework.kafka.support.serializer.JsonSerializer
-      SPRING_KAFKA_PRODUCER_KEY_SERIALIZER: org.apache.kafka.common.serialization.StringSerializer
-
     ports:
       - "8081:8081"
 
@@ -77,13 +75,12 @@ services:
       - discovery-server
       - kafka
     environment:
+      # Only override environment-specific values
       EUREKA_SERVER_URL: http://discovery-server:8761/eureka/
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/order_db
       SPRING_DATASOURCE_USERNAME: myapp
       SPRING_DATASOURCE_PASSWORD: 123456789
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
-      SPRING_KAFKA_PRODUCER_VALUE_SERIALIZER: org.springframework.kafka.support.serializer.JsonSerializer
-      SPRING_KAFKA_PRODUCER_KEY_SERIALIZER: org.apache.kafka.common.serialization.StringSerializer
     ports:
       - "8082:8082"
 
@@ -96,13 +93,12 @@ services:
       - discovery-server
       - kafka
     environment:
+      # Only override environment-specific values
       EUREKA_SERVER_URL: http://discovery-server:8761/eureka/
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/inventory_db
       SPRING_DATASOURCE_USERNAME: myapp
       SPRING_DATASOURCE_PASSWORD: 123456789
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
-      SPRING_KAFKA_PRODUCER_VALUE_SERIALIZER: org.springframework.kafka.support.serializer.JsonSerializer
-      SPRING_KAFKA_PRODUCER_KEY_SERIALIZER: org.apache.kafka.common.serialization.StringSerializer
     ports:
       - "8083:8083"
 

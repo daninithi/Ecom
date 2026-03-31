@@ -57,7 +57,7 @@ public class Order {
     
     public enum OrderStatus {
         PENDING,
-        COMPLETED,
-        CANCELLED
+        SUCCESS,
+        FAILED
     }
 }
