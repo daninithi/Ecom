@@ -28,6 +28,10 @@ public class InventoryService {
     private final RestTemplate restTemplate;
 
     private final KafkaTemplate<String, OrderStatusEvent> kafkaTemplate;
+ 
+    public List<Inventory> getAllInventory() {
+        return inventoryRepository.findAll();
+    }
     
     public Inventory createInventory(InventoryDTO inventory) {
         // Validate inventory data
@@ -42,9 +46,6 @@ public class InventoryService {
         if (inventory.getStock() == null || inventory.getStock() < 0) {
             throw new BadRequestException("Stock quantity cannot be negative");
         }
-        
-        // Verify product exists in Product service
-        verifyProductExists(inventory.getProductId());
         
         // Check if inventory for this product already exists
         if (inventoryRepository.existsByProductId(inventory.getProductId())) {
@@ -125,9 +126,6 @@ public class InventoryService {
         if (restockDTO.getStock() == null || restockDTO.getStock() <= 0) {
             throw new BadRequestException("Restock quantity must be greater than zero");
         }
-        
-        // Verify product exists
-        verifyProductExists(restockDTO.getProductId());
         
         // Get existing inventory by product ID
         Inventory inventory = inventoryRepository.findByProductId(restockDTO.getProductId())
