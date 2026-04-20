@@ -20,3 +20,10 @@ target/
 # Build/cache
 .mvn/wrapper/maven-wrapper.jar
 out/
+
+# Environment files - NEVER commit secrets!
+.env
+.env.local
+.env.*.local
+.env.production
+.env.staging
