@@ -27,15 +27,16 @@ services:
     image: postgres:16
     container_name: ecommerce-postgres
     environment:
-      POSTGRES_USER: myapp
-      POSTGRES_PASSWORD: 123456789
+      POSTGRES_USER: ${SPRING_DATASOURCE_USERNAME}
+      POSTGRES_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
     ports:
-      - "5432:5432"
+      - "${DB_PORT}:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U myapp -d ecommerce_db || exit 1"]
+      test: ["CMD-SHELL", "pg_isready -U ${SPRING_DATASOURCE_USERNAME} -d ${POSTGRES_DB} || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 10
@@ -57,14 +58,15 @@ services:
       - discovery-server
       - kafka
     environment:
-      # Only override environment-specific values
-      EUREKA_SERVER_URL: http://discovery-server:8761/eureka/
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/product_db
-      SPRING_DATASOURCE_USERNAME: myapp
-      SPRING_DATASOURCE_PASSWORD: 123456789
-      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      EUREKA_SERVER_URL: ${EUREKA_SERVER_URL}
+      SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL_PRODUCT}
+      SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME}
+      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: ${SPRING_KAFKA_BOOTSTRAP_SERVERS:-kafka}
+      LOGGING_LEVEL_ROOT: ${LOGGING_LEVEL_ROOT}
+      LOGGING_LEVEL_COM_EXAMPLE: ${LOGGING_LEVEL_COM_EXAMPLE}
     ports:
-      - "8081:8081"
+      - "${SERVER_PORT_PRODUCT}:8081"
 
   order:
     build:
@@ -75,14 +77,15 @@ services:
       - discovery-server
       - kafka
     environment:
-      # Only override environment-specific values
-      EUREKA_SERVER_URL: http://discovery-server:8761/eureka/
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/order_db
-      SPRING_DATASOURCE_USERNAME: myapp
-      SPRING_DATASOURCE_PASSWORD: 123456789
-      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      EUREKA_SERVER_URL: ${EUREKA_SERVER_URL}
+      SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL_ORDER}
+      SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME}
+      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: ${SPRING_KAFKA_BOOTSTRAP_SERVERS:-kafka}
+      LOGGING_LEVEL_ROOT: ${LOGGING_LEVEL_ROOT}
+      LOGGING_LEVEL_COM_EXAMPLE: ${LOGGING_LEVEL_COM_EXAMPLE}
     ports:
-      - "8082:8082"
+      - "${SERVER_PORT_ORDER}:8082"
 
   inventory:
     build:
@@ -93,14 +96,15 @@ services:
       - discovery-server
       - kafka
     environment:
-      # Only override environment-specific values
-      EUREKA_SERVER_URL: http://discovery-server:8761/eureka/
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/inventory_db
-      SPRING_DATASOURCE_USERNAME: myapp
-      SPRING_DATASOURCE_PASSWORD: 123456789
-      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      EUREKA_SERVER_URL: ${EUREKA_SERVER_URL}
+      SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL_INVENTORY}
+      SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME}
+      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: ${SPRING_KAFKA_BOOTSTRAP_SERVERS:-kafka}
+      LOGGING_LEVEL_ROOT: ${LOGGING_LEVEL_ROOT}
+      LOGGING_LEVEL_COM_EXAMPLE: ${LOGGING_LEVEL_COM_EXAMPLE}
     ports:
-      - "8083:8083"
+      - "${SERVER_PORT_INVENTORY}:8083"
 
   api-gateway:
     build:
@@ -117,9 +121,11 @@ services:
       inventory:
         condition: service_started
     environment:
-      EUREKA_SERVER_URL: http://discovery-server:8761/eureka/
+      EUREKA_SERVER_URL: ${EUREKA_SERVER_URL}
+      LOGGING_LEVEL_ROOT: ${LOGGING_LEVEL_ROOT}
+      LOGGING_LEVEL_COM_EXAMPLE: ${LOGGING_LEVEL_COM_EXAMPLE}
     ports:
-      - "8080:8080"
+      - "${SERVER_PORT_GATEWAY}:8080"
 
 volumes:
   postgres-data:
